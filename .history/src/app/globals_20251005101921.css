@@ -1,0 +1,206 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* 皮克斯风格色彩 - 明亮活泼的主色调 */
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 196 94% 48%;  /* 皮克斯蓝 */
+    --primary-foreground: 210 40% 98%;
+    --secondary: 340 82% 52%; /* 皮克斯粉红 */
+    --secondary-foreground: 210 40% 98%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 142 71% 45%;  /* 皮克斯绿 */
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 196 94% 48%;
+    --radius: 1.5rem;  /* 更圆润的边角 */
+  }
+
+  .dark {
+    /* 高科技感深色主题 */
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+    --card: 222 47% 11%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 196 94% 48%;  /* 保持皮克斯蓝 */
+    --primary-foreground: 222 47% 11%;
+    --secondary: 340 82% 52%; /* 保持皮克斯粉红 */
+    --secondary-foreground: 222 47% 11%;
+    --muted: 217 33% 18%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 142 71% 45%;  /* 保持皮克斯绿 */
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217 33% 25%;
+    --input: 217 33% 25%;
+    --ring: 196 94% 48%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    overflow-x: hidden;
+    background-image: 
+      radial-gradient(circle at 25% 25%, rgba(var(--primary), 0.05) 0%, transparent 50%),
+      radial-gradient(circle at 75% 75%, rgba(var(--accent), 0.05) 0%, transparent 50%);
+  }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  /* 皮克斯风格元素 */
+  .pixar-shadow {
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .pixar-card {
+    @apply rounded-2xl bg-white pixar-shadow border-0 overflow-hidden transition-all duration-300;
+    transform-style: preserve-3d;
+    perspective: 1000px;
+  }
+  
+  .pixar-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  }
+  
+  .pixar-button {
+    @apply rounded-full font-medium transition-all duration-300 transform hover:scale-105 active:scale-95;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+  
+  /* 高科技感动画效果 */
+  .tech-glow {
+    box-shadow: 0 0 20px rgba(var(--primary), 0.4);
+    animation: tech-pulse 3s infinite;
+  }
+  
+  @keyframes tech-pulse {
+    0% { box-shadow: 0 0 20px rgba(var(--primary), 0.4); }
+    50% { box-shadow: 0 0 30px rgba(var(--primary), 0.6); }
+    100% { box-shadow: 0 0 20px rgba(var(--primary), 0.4); }
+  }
+  
+  .tech-border {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .tech-border::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(var(--primary), 0.8), transparent);
+    animation: tech-border-flow 3s linear infinite;
+  }
+  
+  @keyframes tech-border-flow {
+    0% { left: -100%; }
+    50% { left: 100%; }
+    100% { left: 100%; }
+  }
+  
+  /* 脉冲动画 */
+  .pulse-slow {
+    animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  
+  @keyframes pulse-slow {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+  
+  /* 渐变文字 */
+  .gradient-text {
+    @apply font-bold;
+    background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--secondary)));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  /* 3D悬浮效果 */
+  .float-3d {
+    transform-style: preserve-3d;
+    transition: transform 0.3s ease;
+  }
+  
+  .float-3d:hover {
+    transform: translateZ(20px) rotateX(5deg) rotateY(5deg);
+  }
+  
+  /* 高科技加载动画 */
+  .tech-loader {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 3px solid transparent;
+    border-top-color: hsl(var(--primary));
+    border-bottom-color: hsl(var(--secondary));
+    animation: tech-spin 1.5s linear infinite;
+  }
+  
+  @keyframes tech-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  .gradient-text {
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6, #06b6d4);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: gradient-shift 3s ease infinite;
+  }
+  
+  @keyframes gradient-shift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+  
+  /* 毛玻璃效果 */
+  .glass {
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+  
+  /* 悬浮动画 */
+  .float {
+    animation: float 6s ease-in-out infinite;
+  }
+  
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+}

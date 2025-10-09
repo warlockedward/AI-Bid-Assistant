@@ -1,0 +1,274 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  tenantId      String?   // 允许为空，注册时分配
+  role          UserRole  @default(USER)
+  ssoProvider   String?
+  ssoId         String?
+  isActive      Boolean   @default(true)
+  lastLogin     DateTime?
+  preferences   Json?
+  permissions   Json?
+  password      String?   // 添加密码字段用于邮箱注册
+  companyName   String?   // 公司名称
+  accounts      Account[]
+  sessions      Session[]
+  tenant        Tenant?   @relation(fields: [tenantId], references: [id])
+  reviewRecords ReviewRecord[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([tenantId])
+  @@index([email])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Tenant {
+  id          String        @id @default(cuid())
+  name        String
+  domain      String?       @unique
+  isActive    Boolean       @default(true)
+  settings    Json?
+  users       User[]
+  bidProjects BidProject[]
+  tenantConfig TenantConfig?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model TenantConfig {
+  id                   String   @id @default(cuid())
+  tenantId             String   @unique
+  ragApiUrl            String?
+  llmEndpoint          String?
+  features             Json     @default("{\"aiAssistance\": true, \"workflowAutomation\": true, \"documentGeneration\": true, \"complianceCheck\": true}")
+  workflowSettings     Json     @default("{\"autoSave\": true, \"checkpointInterval\": 300, \"maxRetries\": 3, \"timeoutMinutes\": 60}")
+  uiCustomization      Json     @default("{\"theme\": \"dark\", \"primaryColor\": \"#3b82f6\", \"companyLogo\": null}")
+  notificationSettings Json     @default("{\"emailNotifications\": true, \"workflowCompletion\": true, \"errorAlerts\": true, \"weeklyReports\": false}")
+  tenant               Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+model BidProject {
+  id               String             @id @default(cuid())
+  tenantId         String
+  name             String
+  description      String?
+  status           BidStatus          @default(DRAFT)
+  tenderDocument   TenderDocument?
+  assignedAgents   AgentAssignment[]
+  generatedContent GeneratedContent[]
+  reviewHistory    ReviewRecord[]
+  workflowExecutions WorkflowExecution[]
+  tenant           Tenant             @relation(fields: [tenantId], references: [id])
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  @@index([tenantId])
+}
+
+model TenderDocument {
+  id                    String                @id @default(cuid())
+  bidProjectId          String                @unique
+  filename              String
+  content               String                @db.Text
+  extractedRequirements Requirement[]
+  classification        DocumentClassification?
+  bidProject            BidProject            @relation(fields: [bidProjectId], references: [id], onDelete: Cascade)
+  uploadedAt            DateTime              @default(now())
+}
+
+model Requirement {
+  id               String         @id @default(cuid())
+  tenderDocumentId String
+  section          String
+  content          String         @db.Text
+  priority         Priority       @default(MEDIUM)
+  category         String
+  complianceRules  String[]
+  tenderDocument   TenderDocument @relation(fields: [tenderDocumentId], references: [id], onDelete: Cascade)
+  createdAt        DateTime       @default(now())
+}
+
+model DocumentClassification {
+  id               String         @id @default(cuid())
+  tenderDocumentId String         @unique
+  industry         String
+  type             String
+  complexity       Complexity     @default(MEDIUM)
+  estimatedWorkload Int
+  tenderDocument   TenderDocument @relation(fields: [tenderDocumentId], references: [id], onDelete: Cascade)
+  createdAt        DateTime       @default(now())
+}
+
+model AgentAssignment {
+  id           String      @id @default(cuid())
+  bidProjectId String
+  agentType    AgentType
+  agentId      String
+  status       AgentStatus @default(PENDING)
+  output       Json?
+  bidProject   BidProject  @relation(fields: [bidProjectId], references: [id], onDelete: Cascade)
+  assignedAt   DateTime    @default(now())
+  completedAt  DateTime?
+
+  @@index([bidProjectId])
+}
+
+model GeneratedContent {
+  id           String        @id @default(cuid())
+  bidProjectId String
+  section      String
+  content      String        @db.Text
+  agentId      String
+  version      Int           @default(1)
+  status       ContentStatus @default(DRAFT)
+  reviewNotes  String?
+  bidProject   BidProject    @relation(fields: [bidProjectId], references: [id], onDelete: Cascade)
+  reviewRecords ReviewRecord[]
+  generatedAt  DateTime      @default(now())
+
+  @@index([bidProjectId])
+}
+
+model ReviewRecord {
+  id                 String           @id @default(cuid())
+  reviewerId         String
+  bidProjectId       String
+  generatedContentId String?
+  action             ReviewAction
+  comments           String           @db.Text
+  reviewer           User             @relation(fields: [reviewerId], references: [id])
+  bidProject         BidProject       @relation(fields: [bidProjectId], references: [id], onDelete: Cascade)
+  generatedContent   GeneratedContent? @relation(fields: [generatedContentId], references: [id])
+  reviewedAt         DateTime         @default(now())
+
+  @@index([bidProjectId])
+}
+
+model WorkflowExecution {
+  id           String        @id @default(cuid())
+  bidProjectId String
+  steps        Json
+  status       WorkflowStatus @default(RUNNING)
+  error        String?
+  bidProject   BidProject    @relation(fields: [bidProjectId], references: [id], onDelete: Cascade)
+  startedAt    DateTime      @default(now())
+  completedAt  DateTime?
+
+  @@index([bidProjectId])
+}
+
+// Enums
+enum UserRole {
+  ADMIN
+  MANAGER
+  USER
+}
+
+enum BidStatus {
+  DRAFT
+  ANALYZING
+  GENERATING
+  REVIEWING
+  APPROVED
+  SUBMITTED
+}
+
+enum AgentType {
+  TENDER_ANALYSIS
+  KNOWLEDGE_RETRIEVAL
+  CONTENT_GENERATION
+  COMPLIANCE_VERIFICATION
+}
+
+enum AgentStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  PAUSED
+}
+
+enum ContentStatus {
+  DRAFT
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  REVISED
+}
+
+enum ReviewAction {
+  APPROVE
+  REJECT
+  REQUEST_REVISION
+}
+
+enum Priority {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum Complexity {
+  SIMPLE
+  MEDIUM
+  COMPLEX
+}
+
+enum WorkflowStatus {
+  RUNNING
+  COMPLETED
+  FAILED
+  PAUSED
+}

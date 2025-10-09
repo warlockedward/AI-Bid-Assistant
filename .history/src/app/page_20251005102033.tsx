@@ -1,0 +1,277 @@
+import Link from 'next/link';
+import { 
+  Bot, 
+  Zap, 
+  Sparkles, 
+  Rocket, 
+  Star, 
+  ArrowRight,
+  CheckCircle,
+  Users,
+  Shield,
+  TrendingUp,
+  Globe,
+  Brain
+} from 'lucide-react';
+
+export default function HomePage() {
+  const features = [
+    {
+      icon: Brain,
+      title: 'AI智能分析',
+      description: '深度学习算法分析招标文件，提取关键信息',
+      color: 'from-blue-500 to-cyan-500',
+      animation: 'float-3d'
+    },
+    {
+      icon: Rocket,
+      title: '自动化工作流',
+      description: '端到端自动化投标流程，提高效率10倍',
+      color: 'from-purple-500 to-pink-500',
+      animation: 'float-3d delay-100'
+    },
+    {
+      icon: Shield,
+      title: '企业级安全',
+      description: '多租户架构，数据隔离，符合企业安全标准',
+      color: 'from-green-500 to-emerald-500',
+      animation: 'float-3d delay-200'
+    },
+    {
+      icon: TrendingUp,
+      title: '数据洞察',
+      description: '实时分析投标成功率，优化策略决策',
+      color: 'from-orange-500 to-red-500',
+      animation: 'float-3d delay-300'
+    }
+  ];
+
+  const stats = [
+    { label: '投标成功率', value: '85%', icon: TrendingUp, animation: 'tech-glow' },
+    { label: '处理时间节省', value: '90%', icon: Zap, animation: 'tech-glow' },
+    { label: '企业用户', value: '500+', icon: Users, animation: 'tech-glow' },
+    { label: '全球覆盖', value: '50+', icon: Globe, animation: 'tech-glow' }
+  ];
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 relative overflow-hidden">
+      {/* 动态背景 */}
+      <div className="absolute inset-0">
+        {/* 渐变球体 */}
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-blue-400/20 to-purple-600/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-cyan-400/20 to-blue-600/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-r from-pink-400/10 to-purple-600/10 rounded-full blur-2xl animate-pulse delay-2000"></div>
+        
+        {/* 网格背景 */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:50px_50px]"></div>
+        
+        {/* 浮动粒子 */}
+        <div className="absolute inset-0">
+          {[...Array(50)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute w-1 h-1 bg-blue-400/30 rounded-full animate-pulse"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 3}s`,
+                animationDuration: `${2 + Math.random() * 2}s`
+              }}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* 导航栏 */}
+      <nav className="relative z-10 px-6 py-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-gradient-to-r from-blue-500 via-purple-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg">
+              <Bot className="h-6 w-6 text-white" />
+            </div>
+            <span className="text-xl font-bold text-white">智能投标系统</span>
+          </div>
+          
+          <div className="flex items-center space-x-4">
+            <Link 
+              href="/auth/signin"
+              className="px-4 py-2 text-white hover:text-blue-300 transition-colors"
+            >
+              登录
+            </Link>
+            <Link 
+              href="/auth/signup"
+              className="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg"
+            >
+              免费试用
+            </Link>
+          </div>
+        </div>
+      </nav>
+
+      {/* 主要内容 */}
+      <div className="relative z-10 max-w-7xl mx-auto px-6 py-20">
+        {/* 英雄区域 */}
+        <div className="text-center mb-20">
+          <div className="flex justify-center mb-8">
+            <div className="relative">
+              <div className="w-32 h-32 bg-gradient-to-r from-blue-500 via-purple-500 to-cyan-500 rounded-3xl flex items-center justify-center shadow-2xl transform rotate-3 hover:rotate-0 transition-transform duration-500">
+                <Rocket className="h-16 w-16 text-white" />
+              </div>
+              <div className="absolute -top-4 -right-4 w-8 h-8 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full flex items-center justify-center animate-bounce">
+                <Sparkles className="h-4 w-4 text-white" />
+              </div>
+            </div>
+          </div>
+          
+          <h1 className="text-6xl font-bold mb-6">
+            <span className="gradient-text">AI驱动的</span>
+            <br />
+            <span className="text-white">智能投标平台</span>
+          </h1>
+          
+          <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
+            利用人工智能技术，自动化分析招标文件，生成高质量投标方案，
+            <br />
+            让您的投标成功率提升85%，处理时间节省90%
+          </p>
+          
+          <div className="flex items-center justify-center space-x-6 mb-12">
+            <Link 
+              href="/auth/signup"
+              className="group px-8 py-4 bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600 hover:from-blue-700 hover:via-purple-700 hover:to-cyan-700 text-white font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-2xl flex items-center space-x-2"
+            >
+              <span>立即开始</span>
+              <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+            </Link>
+            
+            <Link 
+              href="/system-test"
+              className="px-8 py-4 bg-white/10 glass border border-white/20 text-white font-semibold rounded-2xl hover:bg-white/20 transition-all duration-200 backdrop-blur-sm"
+            >
+              查看演示
+            </Link>
+          </div>
+          
+          {/* 特色标签 */}
+          <div className="flex items-center justify-center space-x-8 text-sm text-gray-400">
+            <div className="flex items-center space-x-2">
+              <CheckCircle className="h-4 w-4 text-green-400" />
+              <span>免费试用</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <CheckCircle className="h-4 w-4 text-green-400" />
+              <span>无需信用卡</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <CheckCircle className="h-4 w-4 text-green-400" />
+              <span>即时部署</span>
+            </div>
+          </div>
+        </div>
+
+        {/* 统计数据 */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-20">
+          {stats.map((stat, index) => (
+            <div key={stat.label} className="text-center">
+              <div className="relative mb-4">
+                <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto shadow-lg">
+                  <stat.icon className="h-8 w-8 text-white" />
+                </div>
+                <div className="absolute -top-2 -right-2 w-4 h-4 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full animate-pulse"></div>
+              </div>
+              <div className="text-3xl font-bold text-white mb-2">{stat.value}</div>
+              <div className="text-gray-400">{stat.label}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* 功能特色 */}
+        <div className="mb-20">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-white mb-4">
+              为什么选择我们？
+            </h2>
+            <p className="text-xl text-gray-300">
+              领先的AI技术，为您的投标业务赋能
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {features.map((feature, index) => (
+              <div key={feature.title} className="relative group">
+                <div className={`absolute inset-0 bg-gradient-to-r ${feature.color.replace('to-', 'to-').replace('from-', 'from-').split(' ').map(c => c + '/10').join(' ')} rounded-2xl blur-lg group-hover:blur-xl transition-all duration-300`}></div>
+                
+                <div className="relative bg-white/10 glass border border-white/20 rounded-2xl p-6 backdrop-blur-sm group-hover:bg-white/15 transition-all duration-300 transform group-hover:scale-105">
+                  <div className={`w-12 h-12 bg-gradient-to-r ${feature.color} rounded-2xl flex items-center justify-center mb-4 shadow-lg`}>
+                    <feature.icon className="h-6 w-6 text-white" />
+                  </div>
+                  
+                  <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
+                  <p className="text-gray-400 text-sm">{feature.description}</p>
+                  
+                  <div className="absolute top-2 right-2 w-2 h-2 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full animate-pulse"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* CTA区域 */}
+        <div className="text-center">
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-cyan-500/20 rounded-3xl blur-xl"></div>
+            
+            <div className="relative bg-white/10 glass border border-white/20 rounded-3xl p-12 backdrop-blur-sm">
+              <div className="flex justify-center mb-6">
+                <div className="w-16 h-16 bg-gradient-to-r from-blue-500 via-purple-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg">
+                  <Zap className="h-8 w-8 text-white" />
+                </div>
+              </div>
+              
+              <h2 className="text-3xl font-bold text-white mb-4">
+                准备好开始您的AI投标之旅了吗？
+              </h2>
+              <p className="text-gray-300 mb-8 max-w-2xl mx-auto">
+                加入数百家企业，体验AI驱动的智能投标系统，
+                让技术为您的业务增长助力
+              </p>
+              
+              <div className="flex items-center justify-center space-x-4">
+                <Link 
+                  href="/auth/signup"
+                  className="group px-8 py-4 bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-600 hover:from-blue-700 hover:via-purple-700 hover:to-cyan-700 text-white font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-2xl flex items-center space-x-2"
+                >
+                  <span>免费开始试用</span>
+                  <Rocket className="h-5 w-5 group-hover:translate-y-[-2px] transition-transform" />
+                </Link>
+                
+                <Link 
+                  href="/auth/signin"
+                  className="px-8 py-4 bg-white/10 glass border border-white/20 text-white font-semibold rounded-2xl hover:bg-white/20 transition-all duration-200 backdrop-blur-sm"
+                >
+                  已有账户？登录
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 页脚 */}
+      <footer className="relative z-10 border-t border-white/10 mt-20 py-8">
+        <div className="max-w-7xl mx-auto px-6 text-center">
+          <div className="flex items-center justify-center space-x-2 mb-4">
+            <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <Bot className="h-4 w-4 text-white" />
+            </div>
+            <span className="text-white font-semibold">智能投标系统</span>
+          </div>
+          <p className="text-gray-400 text-sm">
+            © 2024 智能投标系统. 基于AutoGen技术构建. 保留所有权利.
+          </p>
+        </div>
+      </footer>
+    </div>
+  );
+}

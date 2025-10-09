@@ -1,0 +1,220 @@
+"""
+Agent API endpoints for TypeScript-Python integration
+"""
+from fastapi import APIRouter, HTTPException, Query
+from pydantic import BaseModel
+from typing import Dict, Any, List
+import json
+
+from agents.tender_analysis_agent import TenderAnalysisAgent
+from agents.knowledge_retrieval_agent import KnowledgeRetrievalAgent
+from agents.content_generation_agent import ContentGenerationAgent
+from agents.compliance_verification_agent import ComplianceVerificationAgent
+from config import get_tenant_config
+
+router = APIRouter(prefix="/api", tags=["agents"])
+
+
+
+class TenderAnalysisRequest(BaseModel):
+    filename: str
+    content: str
+    project_id: str
+    tenant_id: str
+
+
+
+class KnowledgeRetrievalRequest(BaseModel):
+    query: str
+    context: Dict[str, Any]
+    tenant_id: str
+
+
+
+class ContentGenerationRequest(BaseModel):
+    section: str
+    requirements: List[Dict[str, Any]]
+    knowledge_base: List[Dict[str, Any]]
+    tenant_id: str
+
+
+
+class ComplianceVerificationRequest(BaseModel):
+    generated_content: List[Dict[str, Any]]
+    requirements: List[Dict[str, Any]]
+    compliance_rules: List[str]
+    tenant_id: str
+
+
+
+@router.post("/analyze-tender")
+async def analyze_tender_document(request: TenderAnalysisRequest):
+    """
+    Analyze tender document using TenderAnalysisAgent
+    """
+    try:
+        # Get tenant configuration
+        tenant_config = get_tenant_config(request.tenant_id)
+        
+        # Create agent instance
+        agent = TenderAnalysisAgent(request.tenant_id, tenant_config)
+        
+        # Execute analysis
+        result = agent.analyze_document({
+            "filename": request.filename,
+            "content": request.content
+        })
+        
+        return {
+            "agent_type": "tender_analysis",
+            "status": "success",
+            "output": result,
+            "timestamp": __import__('datetime').datetime.utcnow().isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, 
+                            detail=f"Tender analysis failed: {str(e)}")
+
+
+
+@router.get("/retrieve-knowledge")
+async def retrieve_knowledge(
+    query: str,
+    context: str = Query(...),
+    tenant_id: str = Query(...)
+):
+    """
+    Retrieve knowledge using KnowledgeRetrievalAgent
+    """
+    try:
+        # Parse context JSON
+        context_dict = json.loads(context) if context else {}
+        
+        # Get tenant configuration
+        tenant_config = get_tenant_config(tenant_id)
+        
+        # Create agent instance
+        agent = KnowledgeRetrievalAgent(tenant_id, tenant_config)
+        
+        # Execute knowledge retrieval
+        result = agent.retrieve_knowledge(query, context_dict)
+        
+        return {
+            "agent_type": "knowledge_retrieval",
+            "status": "success",
+            "output": result,
+            "timestamp": __import__('datetime').datetime.utcnow().isoformat()
+        }
+        
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, 
+                            detail="Invalid context JSON format")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Knowledge retrieval failed: {str(e)}")
+
+@router.get("/generate-content")
+async def generate_content(
+    section: str,
+    requirements: str = Query(...),
+    knowledge_base: str = Query(...),
+    tenant_id: str = Query(...)
+):
+    """
+    Generate content using ContentGenerationAgent
+    """
+    try:
+        # Parse JSON parameters
+        requirements_list = json.loads(requirements) if requirements else []
+        knowledge_base_list = json.loads(knowledge_base) if knowledge_base else []
+        
+        # Get tenant configuration
+        tenant_config = get_tenant_config(tenant_id)
+        
+        # Create agent instance
+        agent = ContentGenerationAgent(tenant_id, tenant_config)
+        
+        # Prepare input data
+        input_data = {
+            "section": section,
+            "requirements": requirements_list,
+            "knowledgeBase": knowledge_base_list
+        }
+        
+        # Execute content generation based on section type
+        if section == "technical_proposal":
+            result = agent.generate_technical_proposal(
+                {"technical": [req.get("content", "") for req in requirements_list]},
+                {"technologies": "最新技术栈", "advantages": "高可用、易扩展"}
+            )
+        elif section == "commercial_proposal":
+            result = agent.generate_commercial_proposal(
+                {"commercial": [req.get("content", "") for req in requirements_list]},
+                {"analysis": "市场分析结果"}
+            )
+        elif section == "implementation_plan":
+            result = agent.generate_implementation_plan(
+                {"implementation": [req.get("content", "") for req in requirements_list]},
+                {"risks": ["技术风险", "进度风险"]}
+            )
+        elif section == "executive_summary":
+            result = {"content": agent.generate_executive_summary({})}
+        else:
+            # Default content generation
+            result = {
+                "content": f"Generated content for section: {section}",
+                "sections": [section]
+            }
+        
+        return {
+            "agent_type": "content_generation",
+            "status": "success",
+            "output": result,
+            "timestamp": __import__('datetime').datetime.utcnow().isoformat()
+        }
+        
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail="Invalid JSON format in parameters")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Content generation failed: {str(e)}")
+
+@router.get("/verify-compliance")
+async def verify_compliance(
+    generated_content: str = Query(...),
+    requirements: str = Query(...),
+    compliance_rules: str = Query(...),
+    tenant_id: str = Query(...)
+):
+    """
+    Verify compliance using ComplianceVerificationAgent
+    """
+    try:
+        # Parse JSON parameters
+        content_list = json.loads(generated_content) if generated_content else []
+        requirements_list = json.loads(requirements) if requirements else []
+        rules_list = json.loads(compliance_rules) if compliance_rules else []
+        
+        # Get tenant configuration
+        tenant_config = get_tenant_config(tenant_id)
+        
+        # Create agent instance
+        agent = ComplianceVerificationAgent(tenant_id, tenant_config)
+        
+        # Execute compliance verification
+        result = agent.verify_compliance(
+            content_list,
+            requirements_list,
+            rules_list
+        )
+        
+        return {
+            "agent_type": "compliance_verification",
+            "status": "success",
+            "output": result,
+            "timestamp": __import__('datetime').datetime.utcnow().isoformat()
+        }
+        
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail="Invalid JSON format in parameters")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Compliance verification failed: {str(e)}")

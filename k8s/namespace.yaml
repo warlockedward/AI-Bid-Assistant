@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: intelligent-bid-system
+  labels:
+    name: intelligent-bid-system
+    app: intelligent-bid-system
+    environment: production
+  annotations:
+    description: "Namespace for the Intelligent Bid System application"

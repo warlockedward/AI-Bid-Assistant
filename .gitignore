@@ -1,0 +1,84 @@
+# cSpell:ignore pycod egginfo installedcfg swp swo venv bak vscode idea gitkeep streamlit pytest coverage htmlcov
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Configuration files with secrets
+config/keys.py
+.env
+
+# Logs
+logs/
+*.log
+
+# Data files
+data/bids/*
+!data/bids/.gitkeep
+data/products/*
+!data/products/.gitkeep
+data/cases/*
+!data/cases/.gitkeep
+data/competitors/*
+!data/competitors/.gitkeep
+
+# Output files
+output/chunks/*
+!output/chunks/.gitkeep
+output/proposals/*
+!output/proposals/.gitkeep
+output/reports/*
+!output/reports/.gitkeep
+
+# Temporary files
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# Streamlit
+.streamlit/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# OCR temporary files
+*.pdf.tmp
+*.docx.tmp
