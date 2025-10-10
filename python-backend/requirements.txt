@@ -19,5 +19,5 @@ jsonschema==4.20.0
 croniter==2.0.1
 
 # AutoGen依赖 (可选)
-autogen-agentchat
-autogen-ext[openai]
+autogen-agentchat>=0.7.0
+autogen-ext[openai]>=0.7.0

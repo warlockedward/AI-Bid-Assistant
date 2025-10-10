@@ -57,56 +57,56 @@
 
 1. **克隆项目**
 ---
+---
 ```bash
 git clone <repository-url>
 cd intelligent-bid-system
 ```
 ---
-
 2. **安装前端依赖**
+---
 ---
 ```bash
 npm install
 ```
 ---
-
 3. **设置Python后端**
+---
 ---
 ```bash
 cd python-backend
 ./setup.sh
 ```
 ---
-
 4. **配置环境变量**
+---
 ---
 ```bash
 cp .env.example .env
 # 编辑 .env 文件，填入实际配置值
 ```
 ---
-
 5. **启动数据库**
+---
 ---
 ```bash
 ./start-database.sh
 ```
 ---
-
 6. **初始化演示数据**
+---
 ---
 ```bash
 npx ts-node scripts/init-demo-data.ts
 ```
 ---
-
 7. **启动开发服务器**
+---
 ---
 ```bash
 ./start-system.sh
 ```
 ---
-
 ### 演示账户
 - **邮箱**：demo@example.com
 - **密码**：demo123
@@ -131,7 +131,6 @@ intelligent-bid-system/
 └── docker-compose.yml    # Docker部署配置
 ```
 ---
-
 ## 🔧 核心功能模块
 
 ### 1. 项目管理
@@ -203,18 +202,18 @@ intelligent-bid-system/
 
 ### Docker部署（推荐）
 ---
+---
 ```bash
 docker-compose up -d
 ```
 ---
-
 ### Kubernetes部署
+---
 ---
 ```bash
 kubectl apply -f k8s/
 ```
 ---
-
 ### 云平台部署
 - AWS ECS/EKS
 - Azure AKS
