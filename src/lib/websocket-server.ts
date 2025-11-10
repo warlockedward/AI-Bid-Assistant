@@ -308,7 +308,11 @@ class WorkflowWebSocketManager {
           break
           
         default:
-          console.log('Unknown message type:', message.type)
+          logger.warn('Unknown WebSocket message type', {
+            type: message.type,
+            workflowId: connection.workflowId,
+            component: 'websocket-server'
+          })
       }
     } catch (error) {
       console.error('Error handling WebSocket message:', error)

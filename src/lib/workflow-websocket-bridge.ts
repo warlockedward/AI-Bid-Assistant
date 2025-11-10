@@ -77,7 +77,9 @@ class WorkflowWebSocketBridge {
     if (this.pythonUpdateInterval) {
       clearInterval(this.pythonUpdateInterval);
       this.pythonUpdateInterval = null;
-      console.log('Stopped WebSocket bridge monitoring');
+      logger.info('Stopped WebSocket bridge monitoring', {
+        component: 'websocket-bridge'
+      });
     }
   }
 
@@ -86,7 +88,10 @@ class WorkflowWebSocketBridge {
    */
   registerWorkflow(workflowId: string) {
     this.activeWorkflows.add(workflowId);
-    console.log(`Registered workflow ${workflowId} for WebSocket monitoring`);
+    logger.info('Registered workflow for monitoring', {
+      workflowId,
+      component: 'websocket-bridge'
+    });
   }
 
   /**
@@ -94,7 +99,10 @@ class WorkflowWebSocketBridge {
    */
   unregisterWorkflow(workflowId: string) {
     this.activeWorkflows.delete(workflowId);
-    console.log(`Unregistered workflow ${workflowId} from WebSocket monitoring`);
+    logger.info('Unregistered workflow from monitoring', {
+      workflowId,
+      component: 'websocket-bridge'
+    });
   }
 
   /**
@@ -126,7 +134,11 @@ class WorkflowWebSocketBridge {
         throw new Error(`HTTP ${apiResponse.status}: ${apiResponse.statusText}`);
       }
 
-      console.log(`Sent user response to backend: ${workflowId}/${agentId}`);
+      logger.info('Sent user response to backend', {
+        workflowId,
+        agentId,
+        component: 'websocket-bridge'
+      });
       
       // Broadcast success notification
       websocketManager.broadcastSystemNotification(workflowId, {
@@ -338,7 +350,10 @@ class WorkflowWebSocketBridge {
  * Simulate agent workflow for testing purposes
  */
 export async function simulateAgentWorkflow(workflowId: string, agentConfig: any) {
-  console.log(`Starting simulated workflow ${workflowId} with config:`, agentConfig);
+  logger.info('Starting simulated workflow', {
+    workflowId,
+    component: 'websocket-bridge'
+  });
   
   // Register workflow for monitoring
   workflowWebSocketBridge.registerWorkflow(workflowId);
@@ -390,7 +405,10 @@ export async function simulateAgentWorkflow(workflowId: string, agentConfig: any
     }
   });
   
-  console.log(`Completed simulated workflow ${workflowId}`);
+  logger.info('Completed simulated workflow', {
+    workflowId,
+    component: 'websocket-bridge'
+  });
 }
 
 // Export singleton instance

@@ -161,13 +161,8 @@ export enum WorkflowPriority {
   URGENT = 'urgent'
 }
 
-export enum LogLevel {
-  DEBUG = 'debug',
-  INFO = 'info',
-  WARN = 'warn',
-  ERROR = 'error',
-  FATAL = 'fatal'
-}
+// LogLevel is imported from @/lib/logger to avoid duplication
+export { LogLevel } from '@/lib/logger';
 
 export enum ErrorSeverity {
   RECOVERABLE = 'recoverable',

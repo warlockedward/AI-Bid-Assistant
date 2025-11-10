@@ -14,11 +14,14 @@ export const authOptions: NextAuthOptions = {
         domain: { label: '域名', type: 'text', placeholder: '可选' }
       },
       async authorize(credentials) {
-        console.log('认证请求:', credentials);
+        logger.info('Authentication request received', { 
+          email: credentials?.email,
+          hasDomain: !!credentials?.domain 
+        });
         
         // 验证凭据
         if (!credentials?.email || !credentials?.password) {
-          console.log('缺少凭据');
+          logger.warn('Authentication failed: missing credentials');
           throw new AuthenticationError('邮箱和密码为必填项', 'MISSING_CREDENTIALS');
         }
 
@@ -35,7 +38,7 @@ export const authOptions: NextAuthOptions = {
             include: { tenant: true }
           });
           
-          console.log('找到用户:', user);
+          logger.info('User found', { userId: user?.id, email: credentials.email });
           
           // 检查用户是否存在
           if (!user) {
@@ -58,7 +61,7 @@ export const authOptions: NextAuthOptions = {
             throw new AuthenticationError('密码错误', 'INVALID_PASSWORD');
           }
 
-          console.log('密码验证成功');
+          logger.info('Password verification successful', { userId: user.id });
           return {
             id: user.id,
             email: user.email,
@@ -80,7 +83,7 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async jwt({ token, user }) {
-      console.log('JWT回调:', { token, user });
+      logger.debug('JWT callback executed', { hasUser: !!user, tokenId: token.id });
       if (user) {
         token.id = user.id;
         token.tenantId = (user as any).tenantId;
@@ -88,7 +91,7 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
-      console.log('Session回调:', { session, token });
+      logger.debug('Session callback executed', { userId: token.id });
       if (token && session.user) {
         session.user.id = token.id as string;
         (session.user as any).tenantId = token.tenantId as string;
@@ -98,7 +101,11 @@ export const authOptions: NextAuthOptions = {
   },
   events: {
     async signIn({ user, account, profile, isNewUser }) {
-      console.log('用户登录:', { user, account, profile, isNewUser });
+      logger.info('User signed in', { 
+        userId: user.id, 
+        email: user.email,
+        isNewUser 
+      });
       try {
         // 更新用户最后登录时间
         if (user?.id) {
@@ -112,10 +119,10 @@ export const authOptions: NextAuthOptions = {
       }
     },
     async signOut({ token, session }) {
-      console.log('用户登出:', { token, session });
+      logger.info('User signed out', { userId: token?.id });
     },
     async createUser({ user }) {
-      console.log('创建新用户:', user);
+      logger.info('New user created', { userId: user.id, email: user.email });
     }
   },
   pages: {

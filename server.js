@@ -29,13 +29,12 @@ app.prepare().then(() => {
     
     // Import and initialize WebSocket server
     try {
-      // Comment out WebSocket initialization for now to avoid database issues
-      // const { initializeWebSocketServer } = require('./src/lib/websocket-init.js')
-      // await initializeWebSocketServer(server)
-      console.log('WebSocket server initialization temporarily disabled')
-      console.log('WebSocket functionality will be available through API routes')
+      const { initializeWebSocketServer } = require('./src/lib/websocket-init.js')
+      await initializeWebSocketServer(server)
+      console.log('✅ WebSocket server initialized successfully')
     } catch (error) {
-      console.error('Failed to initialize WebSocket server:', error)
+      console.error('❌ Failed to initialize WebSocket server:', error)
+      console.log('⚠️  WebSocket functionality will be limited to API routes')
     }
   })
 

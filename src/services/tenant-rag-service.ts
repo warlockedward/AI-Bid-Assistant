@@ -80,7 +80,11 @@ export class TenantRAGService {
     if (config.fallbackEndpoints && config.fallbackEndpoints.length > 0) {
       for (const endpoint of config.fallbackEndpoints) {
         try {
-          console.log(`Trying fallback RAG endpoint: ${endpoint}`);
+          logger.info('Trying fallback RAG endpoint', {
+            endpoint,
+            tenantId: ragQuery.tenantId,
+            component: 'tenant-rag-service'
+          });
           return await this.queryEndpoint(endpoint, ragQuery, config);
         } catch (error) {
           console.warn(`Fallback RAG endpoint ${endpoint} failed:`, error);

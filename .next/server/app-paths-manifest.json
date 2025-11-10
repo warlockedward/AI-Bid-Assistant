@@ -1,16 +1,7 @@
 {
-  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
-  "/favicon.ico/route": "app/favicon.ico/route.js",
-  "/api/python/[...path]/route": "app/api/python/[...path]/route.js",
-  "/auth/signin/page": "app/auth/signin/page.js",
-  "/auth/signup/page": "app/auth/signup/page.js",
-  "/api/projects/route": "app/api/projects/route.js",
-  "/api/config/route": "app/api/config/route.js",
-  "/api/workflows/tenant/[tenantId]/route": "app/api/workflows/tenant/[tenantId]/route.js",
-  "/api/workflows/tenant/[tenantId]/preferences/route": "app/api/workflows/tenant/[tenantId]/preferences/route.js",
-  "/api/workflows/tenant/[tenantId]/stats/route": "app/api/workflows/tenant/[tenantId]/stats/route.js",
-  "/dashboard/projects/page": "app/dashboard/projects/page.js",
   "/dashboard/overview/page": "app/dashboard/overview/page.js",
-  "/dashboard/bid-workflow/page": "app/dashboard/bid-workflow/page.js",
-  "/dashboard/workflow-management/page": "app/dashboard/workflow-management/page.js"
+  "/dashboard/agent-workspace/page": "app/dashboard/agent-workspace/page.js",
+  "/dashboard/documents/page": "app/dashboard/documents/page.js",
+  "/dashboard/analytics/page": "app/dashboard/analytics/page.js",
+  "/dashboard/reviews/page": "app/dashboard/reviews/page.js"
 }

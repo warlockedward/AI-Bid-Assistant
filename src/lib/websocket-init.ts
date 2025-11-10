@@ -10,16 +10,22 @@ let isInitialized = false
 
 export function initializeWebSocketServer(server: Server) {
   if (isInitialized) {
-    console.log('WebSocket server already initialized')
+    logger.warn('WebSocket server already initialized', {
+      component: 'websocket-init'
+    })
     return
   }
 
   try {
     websocketManager.initialize(server)
     isInitialized = true
-    console.log('WebSocket server initialized successfully')
+    logger.info('WebSocket server initialized successfully', {
+      component: 'websocket-init'
+    })
   } catch (error) {
-    console.error('Failed to initialize WebSocket server:', error)
+    logger.error('Failed to initialize WebSocket server', {
+      component: 'websocket-init'
+    }, error as Error)
   }
 }
 

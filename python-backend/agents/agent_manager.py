@@ -6,6 +6,7 @@ from typing import Dict, Any, List, Optional
 from datetime import datetime
 import uuid
 import asyncio
+import threading
 from autogen_agentchat.teams import RoundRobinGroupChat
 from autogen_agentchat.conditions import MaxMessageTermination
 from autogen_agentchat.base import TaskResult
@@ -18,6 +19,7 @@ class AgentWorkflowManager:
         self.workflows = {}
         self.group_chats = {}
         self.model_configs = {}
+        self._lock = threading.Lock()  # Add lock for thread-safe operations
         
     async def start_workflow(
         self, 
@@ -281,16 +283,17 @@ class AgentWorkflowManager:
         result: Optional[Dict[str, Any]] = None, 
         error: Optional[str] = None
     ):
-        """更新工作流状态"""
-        if workflow_id in self.workflows:
-            self.workflows[workflow_id].update({
-                "status": status,
-                "current_step": current_step,
-                "progress": progress,
-                "result": result,
-                "error": error,
-                "last_updated": datetime.now()
-            })
+        """更新工作流状态 - 线程安全"""
+        with self._lock:
+            if workflow_id in self.workflows:
+                self.workflows[workflow_id].update({
+                    "status": status,
+                    "current_step": current_step,
+                    "progress": progress,
+                    "result": result,
+                    "error": error,
+                    "last_updated": datetime.now()
+                })
     
     def get_workflow_status(
         self, 

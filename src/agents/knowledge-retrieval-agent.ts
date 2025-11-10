@@ -155,21 +155,20 @@ Please format the response as structured knowledge that addresses the query and 
   ): Promise<void> {
     try {
       // Store interaction memory for future optimization
-      // TODO: Fix TypeScript issue with memorySystem
-      // await this.memorySystem?.storeInteraction(
-      //   this.tenantContext,
-      //   'knowledge_retrieval_success',
-      //   {
-      //     query: input.query,
-      //     context: input.context,
-      //     results_count: result.retrievedKnowledge.length,
-      //     relevance_score: result.relevanceScore,
-      //     sources: result.sources,
-      //     processing_time: result.processingTime
-      //   },
-      //   ['knowledge_retrieval', 'success', 'rag'],
-      //   30 // expires in 30 days
-      // );
+      await this.memorySystem.storeInteraction(
+        this.tenantContext,
+        'knowledge_retrieval_success',
+        {
+          query: input.query,
+          context: input.context,
+          results_count: result.retrievedKnowledge.length,
+          relevance_score: result.relevanceScore,
+          sources: result.sources,
+          processing_time: result.processingTime
+        },
+        ['knowledge_retrieval', 'success', 'rag'],
+        30 // expires in 30 days
+      );
     } catch (error) {
       this.logError('Failed to record successful retrieval', error);
     }
@@ -183,20 +182,19 @@ Please format the response as structured knowledge that addresses the query and 
     error: any
   ): Promise<void> {
     try {
-      // TODO: Fix TypeScript issue with memorySystem
-      // await this.memorySystem?.storeInteraction(
-      //   this.tenantContext,
-      //   'knowledge_retrieval_failure',
-      //   {
-      //     query: input.query,
-      //     context: input.context,
-      //     error_message: error.message,
-      //     error_type: error.constructor.name,
-      //     timestamp: new Date().toISOString()
-      //   },
-      //   ['knowledge_retrieval', 'failure', 'rag'],
-      //   7 // expires in 7 days
-      // );
+      await this.memorySystem.storeInteraction(
+        this.tenantContext,
+        'knowledge_retrieval_failure',
+        {
+          query: input.query,
+          context: input.context,
+          error_message: error.message,
+          error_type: error.constructor.name,
+          timestamp: new Date().toISOString()
+        },
+        ['knowledge_retrieval', 'failure', 'rag'],
+        7 // expires in 7 days
+      );
     } catch (memoryError) {
       this.logError('Failed to record retrieval failure', memoryError);
     }

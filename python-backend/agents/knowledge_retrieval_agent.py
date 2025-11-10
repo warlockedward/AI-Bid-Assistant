@@ -80,6 +80,7 @@ class KnowledgeRetrievalAgent(BaseAgent):
         """搜索知识库"""
         try:
             # 集成FastGPT RAG系统
+            timeout = self.config.get("fastgpt_timeout", 30.0)
             async with httpx.AsyncClient() as client:
                 response = await client.post(
                     f"{self.fastgpt_url}/api/v1/search",
@@ -88,7 +89,7 @@ class KnowledgeRetrievalAgent(BaseAgent):
                         "filters": filters or {},
                         "top_k": 10
                     },
-                    timeout=30.0
+                    timeout=timeout
                 )
                 
                 if response.status_code == 200:
@@ -99,24 +100,17 @@ class KnowledgeRetrievalAgent(BaseAgent):
                         "count": len(results.get("data", []))
                     }
                 else:
-                    return {
-                        "success": False,
-                        "error": f"搜索失败: {response.status_code}",
-                        "results": []
-                    }
+                    error_msg = f"搜索失败: HTTP {response.status_code}"
+                    raise RuntimeError(error_msg)
                     
         except httpx.RequestError as e:
-            return {
-                "success": False,
-                "error": f"请求错误: {str(e)}",
-                "results": []
-            }
+            error_msg = f"知识库请求错误: {str(e)}"
+            raise RuntimeError(error_msg) from e
         except Exception as e:
-            return {
-                "success": False,
-                "error": f"未知错误: {str(e)}",
-                "results": []
-            }
+            if isinstance(e, RuntimeError):
+                raise
+            error_msg = f"知识库搜索失败: {str(e)}"
+            raise RuntimeError(error_msg) from e
     
     async def retrieve_industry_standards(
         self, 

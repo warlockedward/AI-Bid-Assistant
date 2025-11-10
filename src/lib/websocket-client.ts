@@ -44,7 +44,10 @@ export class WorkflowWebSocketClient {
         this.ws = new WebSocket(wsUrl)
 
         this.ws.onopen = () => {
-          console.log('WebSocket connected for workflow:', this.options.workflowId)
+          logger.info('WebSocket connected', { 
+            workflowId: this.options.workflowId,
+            component: 'websocket-client'
+          })
           this.isConnecting = false
           this.reconnectAttempts = 0
           this.startPingTimer()
@@ -62,7 +65,12 @@ export class WorkflowWebSocketClient {
         }
 
         this.ws.onclose = (event) => {
-          console.log('WebSocket closed:', event.code, event.reason)
+          logger.info('WebSocket closed', { 
+            code: event.code,
+            reason: event.reason,
+            workflowId: this.options.workflowId,
+            component: 'websocket-client'
+          })
           this.isConnecting = false
           this.stopPingTimer()
           this.options.onDisconnect?.()
@@ -161,7 +169,12 @@ export class WorkflowWebSocketClient {
       30000 // Max 30 seconds
     )
 
-    console.log(`Scheduling WebSocket reconnect attempt ${this.reconnectAttempts} in ${delay}ms`)
+    logger.info('Scheduling WebSocket reconnect', { 
+      attempt: this.reconnectAttempts,
+      delayMs: delay,
+      workflowId: this.options.workflowId,
+      component: 'websocket-client'
+    })
     
     this.reconnectTimer = setTimeout(() => {
       if (this.shouldReconnect) {

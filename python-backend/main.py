@@ -107,130 +107,7 @@ class BidResponse(BaseModel):
     result: Dict[str, Any] = {}
 
 
-# 模拟智能体处理函数
-async def process_tender_analysis(tender_document: str) -> List[AgentMessage]:
-    """招标分析智能体"""
-    messages = []
-    messages.append(AgentMessage(
-        agent="招标分析智能体",
-        content="开始分析招标文档...",
-        type="action"
-    ))
-    
-    # 模拟处理时间
-    await asyncio.sleep(2)
-    
-    # 模拟分析结果
-    requirements = ["技术要求", "商务要求", "资质要求", "交付要求", "服务要求"]
-    messages.append(AgentMessage(
-        agent="招标分析智能体",
-        content=f"分析完成，识别出{len(requirements)}个关键需求领域",
-        type="action"
-    ))
-    
-    return messages
-
-
-async def process_knowledge_retrieval(
-        requirements: List[str]) -> List[AgentMessage]:
-    """知识检索智能体"""
-    messages = []
-    messages.append(AgentMessage(
-        agent="知识检索智能体",
-        content="开始检索相关行业知识...",
-        type="action"
-    ))
-    
-    await asyncio.sleep(1.5)
-    
-    messages.append(AgentMessage(
-        agent="知识检索智能体",
-        content=f"检索完成，获取到{len(requirements)*5}条相关技术规范",
-        type="action"
-    ))
-    
-    return messages
-
-
-async def process_content_generation() -> List[AgentMessage]:
-    """内容生成智能体"""
-    messages = []
-    messages.append(AgentMessage(
-        agent="内容生成智能体",
-        content="开始生成投标文档内容...",
-        type="action"
-    ))
-    
-    await asyncio.sleep(3)
-    
-    messages.append(AgentMessage(
-        agent="内容生成智能体",
-        content="文档生成完成，共生成8个章节内容",
-        type="action"
-    ))
-    
-    return messages
-
-
-async def process_compliance_check() -> List[AgentMessage]:
-    """合规验证智能体"""
-    messages = []
-    messages.append(AgentMessage(
-        agent="合规验证智能体",
-        content="开始验证文档合规性...",
-        type="action"
-    ))
-    
-    await asyncio.sleep(2)
-    
-    messages.append(AgentMessage(
-        agent="合规验证智能体",
-        content="合规验证通过，发现2个建议优化点",
-        type="action"
-    ))
-    
-    return messages
-
-
-@app.post("/api/bid/generate", response_model=BidResponse)
-async def generate_bid(request: BidRequest):
-    """生成投标文档的API端点"""
-    try:
-        all_messages = []
-        
-        # 1. 招标分析
-        analysis_messages = await process_tender_analysis(
-            request.tender_document)
-        all_messages.extend(analysis_messages)
-        
-        # 2. 知识检索
-        retrieval_messages = await process_knowledge_retrieval(
-            ["技术要求", "商务要求"])
-        all_messages.extend(retrieval_messages)
-        
-        # 3. 内容生成
-        generation_messages = await process_content_generation()
-        all_messages.extend(generation_messages)
-        
-        # 4. 合规验证
-        compliance_messages = await process_compliance_check()
-        all_messages.extend(compliance_messages)
-        
-        return BidResponse(
-            bid_id=f"bid_{request.tenant_id}_{hash(request.tender_document)}",
-            status="completed",
-            messages=all_messages,
-            result={
-                "document_url": (f"/api/documents/{request.tenant_id}/"
-                                 f"bid_document.pdf"),
-                "sections_generated": 8,
-                "compliance_score": 95,
-                "optimization_suggestions": 2
-            }
-        )
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"处理失败: {str(e)}")
+# Legacy mock endpoint removed - use /api/agents/workflow endpoints instead
 
 
 @app.get("/")
@@ -259,16 +136,7 @@ async def health_check_alt():
     }
 
 
-@app.on_event("startup")
-async def startup_event():
-    """Start background monitoring tasks"""
-    pass
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Clean up monitoring tasks"""
-    pass
+# Startup and shutdown events removed - no background tasks needed
 
 
 if __name__ == "__main__":

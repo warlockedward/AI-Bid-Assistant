@@ -40,7 +40,11 @@ export class AgentManager {
   }
 
   async executeWorkflow(bidProjectId: string): Promise<WorkflowExecution> {
-    console.log(`[AgentManager][${this.tenantId}] 开始执行工作流`, { bidProjectId });
+    logger.info('Starting workflow execution', { 
+      tenantId: this.tenantId,
+      bidProjectId,
+      component: 'agent-manager'
+    });
 
     const db = withTenantIsolation(this.tenantId);
 
@@ -99,9 +103,11 @@ export class AgentManager {
         }
       });
 
-      console.log(`[AgentManager][${this.tenantId}] 工作流执行完成`, { 
+      logger.info('Workflow execution completed', { 
+        tenantId: this.tenantId,
         workflowId: updatedExecution.id,
-        stepCount: executedSteps.length
+        stepCount: executedSteps.length,
+        component: 'agent-manager'
       });
 
       // Map database result to WorkflowExecution interface
@@ -148,7 +154,12 @@ export class AgentManager {
       }
 
       try {
-        console.log(`[AgentManager][${this.tenantId}] 执行步骤: ${step.name}`);
+        logger.info('Executing workflow step', {
+          tenantId: this.tenantId,
+          stepName: step.name,
+          stepType: step.type,
+          component: 'agent-manager'
+        });
         
         step.status = AgentStatus.RUNNING;
         step.startedAt = new Date();
@@ -187,7 +198,11 @@ export class AgentManager {
 
         executedSteps.push(step);
 
-        console.log(`[AgentManager][${this.tenantId}] 步骤完成: ${step.name}`);
+        logger.info('Workflow step completed', {
+          tenantId: this.tenantId,
+          stepName: step.name,
+          component: 'agent-manager'
+        });
 
       } catch (error) {
         console.error(`[AgentManager][${this.tenantId}] 步骤失败: ${step.name}`, error);
@@ -269,7 +284,11 @@ export class AgentManager {
       data: { status: 'PAUSED' }
     });
 
-    console.log(`[AgentManager][${this.tenantId}] 工作流已暂停`, { workflowId });
+    logger.info('Workflow paused', { 
+      tenantId: this.tenantId,
+      workflowId,
+      component: 'agent-manager'
+    });
   }
 
   async resumeWorkflow(workflowId: string): Promise<void> {
@@ -280,7 +299,11 @@ export class AgentManager {
       data: { status: 'RUNNING' }
     });
 
-    console.log(`[AgentManager][${this.tenantId}] 工作流已恢复`, { workflowId });
+    logger.info('Workflow resumed', { 
+      tenantId: this.tenantId,
+      workflowId,
+      component: 'agent-manager'
+    });
   }
 
   getAgent(agentType: AgentType): BaseAgent | undefined {

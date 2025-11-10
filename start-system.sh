@@ -8,6 +8,19 @@ if [ ! -f "package.json" ]; then
     exit 1
 fi
 
+# 检查并安装Node.js依赖
+if [ ! -d "node_modules" ]; then
+    echo "📦 安装Node.js依赖..."
+    npm install
+    if [ $? -ne 0 ]; then
+        echo "❌ Node.js依赖安装失败"
+        exit 1
+    fi
+    echo "✅ Node.js依赖安装完成"
+else
+    echo "✅ Node.js依赖已存在"
+fi
+
 # 启动Python后端
 echo "🐍 启动Python后端服务..."
 cd python-backend
