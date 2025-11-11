@@ -2,6 +2,7 @@ from typing import Dict, Any, List
 import json
 from autogen_agentchat.agents import AssistantAgent
 from .base_agent import BaseAgent
+from .prompt_templates import ComplianceVerificationPrompt
 
 
 class ComplianceVerificationAgent(BaseAgent):
@@ -13,13 +14,8 @@ class ComplianceVerificationAgent(BaseAgent):
 
     def _create_autogen_agent(self) -> AssistantAgent:
         """创建AutoGen代理实例"""
-        system_message = """你是一个专业的合规验证专家。你的主要职责是：
-1. 验证投标内容是否符合招标要求和行业标准
-2. 检查技术方案、商务条款的合规性
-3. 识别潜在的风险和不符合项
-4. 提供改进建议和优化方案
-
-请确保验证全面、准确，为最终投标质量提供保障。"""
+        # 使用标准化的高质量提示词
+        system_message = ComplianceVerificationPrompt.get_system_message()
         
         agent = AssistantAgent(
             name=f"compliance_verifier_{self.tenant_id}",
@@ -42,23 +38,23 @@ class ComplianceVerificationAgent(BaseAgent):
 
         try:
             if operation == "verify_technical_compliance":
-                result = self.verify_technical_compliance(requirements, 
+                result = await self.verify_technical_compliance(requirements, 
                                                           content)
             elif operation == "verify_commercial_compliance":
-                result = self.verify_commercial_compliance(requirements, 
+                result = await self.verify_commercial_compliance(requirements, 
                                                            content)
             elif operation == "check_requirement_coverage":
-                result = self.check_requirement_coverage(requirements, 
+                result = await self.check_requirement_coverage(requirements, 
                                                          content)
             elif operation == "assess_overall_quality":
-                result = self.assess_overall_quality(content, 
+                result = await self.assess_overall_quality(content, 
                                                      verification_results)
             elif operation == "generate_compliance_report":
-                result = {"report": self.generate_compliance_report(
+                result = {"report": await self.generate_compliance_report(
                     verification_results)}
             else:
                 # 默认操作
-                result = self.verify_technical_compliance(requirements, 
+                result = await self.verify_technical_compliance(requirements, 
                                                           content)
 
             return result
@@ -68,12 +64,12 @@ class ComplianceVerificationAgent(BaseAgent):
                 f"Compliance verification failed: {str(error)}"
             ) from error
 
-    def verify_technical_compliance(
+    async def verify_technical_compliance(
         self, 
         requirements: Dict[str, Any],
         content: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """验证技术合规性"""
+        """验证技术合规性 - 使用LLM进行智能验证"""
         compliance_results: Dict[str, Any] = {
             "met_requirements": [],
             "missing_requirements": [],
@@ -86,14 +82,15 @@ class ComplianceVerificationAgent(BaseAgent):
         tech_content: Dict[str, Any] = content.get("technical", {})
         
         for req in tech_requirements:
-            if self._is_requirement_covered(req, tech_content):
+            is_covered = await self._is_requirement_covered(req, tech_content)
+            if is_covered:
                 compliance_results["met_requirements"].append(req)
             else:
                 compliance_results["missing_requirements"].append(req)
         
-        # 检查技术问题
+        # 使用LLM识别技术问题
         compliance_results["technical_issues"] = \
-            self._identify_technical_issues(tech_content)
+            await self._identify_technical_issues(tech_content)
         
         return compliance_results
     
@@ -129,12 +126,12 @@ class ComplianceVerificationAgent(BaseAgent):
         
         return compliance_results
     
-    def check_requirement_coverage(
+    async def check_requirement_coverage(
         self, 
         requirements: Dict[str, Any],
         content: Dict[str, Any]
     ) -> Dict[str, Any]:
-        """检查需求覆盖度"""
+        """检查需求覆盖度 - 使用LLM进行语义匹配"""
         coverage_analysis: Dict[str, Any] = {
             "total_requirements": 0,
             "covered_requirements": 0,
@@ -161,7 +158,8 @@ class ComplianceVerificationAgent(BaseAgent):
             }
             
             for req in req_list:
-                if self._is_requirement_covered(req, content):
+                is_covered = await self._is_requirement_covered(req, content)
+                if is_covered:
                     coverage_details[req_type]["covered"] += 1
                     covered_count += 1
                 else:
@@ -248,26 +246,97 @@ class ComplianceVerificationAgent(BaseAgent):
 """
         return report
     
-    def _is_requirement_covered(
+    async def _is_requirement_covered(
         self, 
         requirement: str, 
         content: Dict[str, Any]
     ) -> bool:
-        """检查需求是否被覆盖"""
-        content_text = json.dumps(content, ensure_ascii=False)
-        return requirement.lower() in content_text.lower()
+        """检查需求是否被覆盖 - 使用LLM进行语义匹配"""
+        try:
+            content_text = json.dumps(content, ensure_ascii=False)
+            
+            # 使用LLM进行语义匹配
+            matching_prompt = f"""
+判断以下投标内容是否充分响应了招标需求：
+
+【招标需求】
+{requirement}
+
+【投标内容】
+{content_text[:1500]}
+
+【判断标准】
+- 内容明确提到了该需求
+- 提供了具体的解决方案或响应
+- 响应的深度和质量符合要求
+
+请回答：YES（充分响应）或 NO（未响应或响应不足）
+如果是YES，请简要说明响应的位置和方式。
+"""
+            
+            response = await self._chat_with_agent(matching_prompt)
+            
+            # 解析响应
+            response_upper = response.upper()
+            is_covered = "YES" in response_upper and "NO" not in response_upper.split("YES")[0]
+            
+            return is_covered
+            
+        except Exception as e:
+            # 降级到关键词匹配
+            content_text = json.dumps(content, ensure_ascii=False)
+            return requirement.lower() in content_text.lower()
     
-    def _identify_technical_issues(
+    async def _identify_technical_issues(
         self, 
         tech_content: Dict[str, Any]
     ) -> List[str]:
-        """识别技术问题"""
-        issues: List[str] = []
-        if not tech_content.get("architecture"):
-            issues.append("缺少系统架构设计")
-        if not tech_content.get("performance"):
-            issues.append("缺少性能指标说明")
-        return issues
+        """识别技术问题 - 使用LLM进行深度分析"""
+        try:
+            import json
+            
+            issues_prompt = f"""
+请审查以下技术方案，识别潜在的问题和不足：
+
+【技术方案内容】
+{json.dumps(tech_content, ensure_ascii=False, indent=2)}
+
+【审查要点】
+1. 架构设计是否完整和合理
+2. 功能实现是否具体和可行
+3. 性能指标是否明确和可达
+4. 技术选型是否合适
+5. 是否存在技术风险
+
+请列出发现的问题（如果没有问题，返回空数组）：
+["问题1", "问题2", ...]
+"""
+            
+            response = await self._chat_with_agent(issues_prompt)
+            
+            # 解析问题列表
+            import re
+            json_match = re.search(r'\[.*?\]', response, re.DOTALL)
+            if json_match:
+                issues = json.loads(json_match.group())
+                return issues
+            else:
+                # 降级到规则检查
+                issues: List[str] = []
+                if not tech_content.get("architecture"):
+                    issues.append("缺少系统架构设计")
+                if not tech_content.get("performance"):
+                    issues.append("缺少性能指标说明")
+                return issues
+                
+        except Exception as e:
+            # 降级方案
+            issues: List[str] = []
+            if not tech_content.get("architecture"):
+                issues.append("缺少系统架构设计")
+            if not tech_content.get("performance"):
+                issues.append("缺少性能指标说明")
+            return issues
     
     def _check_commercial_standards(
         self, 

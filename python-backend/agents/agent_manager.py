@@ -11,6 +11,8 @@ from autogen_agentchat.teams import RoundRobinGroupChat
 from autogen_agentchat.conditions import MaxMessageTermination
 from autogen_agentchat.base import TaskResult
 
+from .collaborative_workflow import CollaborativeWorkflow, HumanInterventionManager
+
 
 class AgentWorkflowManager:
     """基于AutoGen的智能体工作流管理器 - 支持动态模型配置"""
@@ -20,6 +22,10 @@ class AgentWorkflowManager:
         self.group_chats = {}
         self.model_configs = {}
         self._lock = threading.Lock()  # Add lock for thread-safe operations
+        
+        # 协作工作流管理
+        self.collaborative_workflows: Dict[str, CollaborativeWorkflow] = {}
+        self.intervention_manager = HumanInterventionManager()
         
     async def start_workflow(
         self, 
@@ -334,3 +340,106 @@ class AgentWorkflowManager:
         if workflow_id in self.workflows:
             self.workflows[workflow_id]["status"] = "cancelled"
             self.workflows[workflow_id]["last_updated"] = datetime.now()
+
+    async def start_collaborative_workflow(
+        self,
+        tenant_id: str,
+        tender_document: str,
+        config: Dict[str, Any],
+        max_iterations: int = 3
+    ) -> str:
+        """启动协作工作流"""
+        workflow_id = str(uuid.uuid4())
+        
+        self.workflows[workflow_id] = {
+            "id": workflow_id,
+            "tenant_id": tenant_id,
+            "status": "running",
+            "current_step": "initialization",
+            "progress": 0.0,
+            "created_at": datetime.now(),
+            "last_updated": datetime.now(),
+            "tender_document": tender_document,
+            "result": None,
+            "error": None,
+            "collaborative": True
+        }
+        
+        # 创建协作工作流
+        collaborative_workflow = CollaborativeWorkflow(tenant_id, config)
+        self.collaborative_workflows[workflow_id] = collaborative_workflow
+        
+        # 异步执行协作工作流
+        asyncio.create_task(
+            self._execute_collaborative_workflow(workflow_id, tender_document, max_iterations)
+        )
+        
+        return workflow_id
+    
+    async def _execute_collaborative_workflow(
+        self,
+        workflow_id: str,
+        tender_document: str,
+        max_iterations: int
+    ):
+        """执行协作工作流"""
+        try:
+            self._update_workflow_status(
+                workflow_id, "running", "collaborative_analysis", 10.0
+            )
+            
+            collaborative_workflow = self.collaborative_workflows[workflow_id]
+            
+            # 执行协作工作流
+            result = await collaborative_workflow.execute_collaborative_workflow(
+                tender_document, max_iterations=max_iterations
+            )
+            
+            if result["success"]:
+                self._update_workflow_status(
+                    workflow_id, "completed", "workflow_complete", 100.0, result
+                )
+            else:
+                self._update_workflow_status(
+                    workflow_id, "failed", "workflow_failed", 0.0,
+                    error=result.get("error")
+                )
+                
+        except Exception as e:
+            self._update_workflow_status(
+                workflow_id, "failed", "execution_error", 0.0, error=str(e)
+            )
+    
+    def get_collaborative_workflow_status(self, workflow_id: str) -> Optional[Dict[str, Any]]:
+        """获取协作工作流状态"""
+        status = self.workflows.get(workflow_id)
+        if status and status.get("collaborative"):
+            # 添加协作历史
+            collaborative_workflow = self.collaborative_workflows.get(workflow_id)
+            if collaborative_workflow:
+                status["collaboration_history"] = collaborative_workflow.collaboration_history
+        return status
+    
+    def add_human_intervention(
+        self,
+        workflow_id: str,
+        stage: str,
+        content: Dict[str, Any],
+        reason: str
+    ) -> str:
+        """添加人工干预点"""
+        return self.intervention_manager.add_intervention_point(
+            workflow_id, stage, content, reason
+        )
+    
+    def submit_intervention_feedback(
+        self,
+        intervention_id: str,
+        feedback: Dict[str, Any]
+    ):
+        """提交干预反馈"""
+        self.intervention_manager.submit_user_feedback(intervention_id, feedback)
+    
+    def get_pending_interventions(self) -> List[Dict[str, Any]]:
+        """获取待处理的干预点"""
+        return self.intervention_manager.get_pending_interventions()

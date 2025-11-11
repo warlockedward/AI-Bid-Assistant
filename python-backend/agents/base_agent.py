@@ -1,6 +1,6 @@
 import time
 from abc import ABC, abstractmethod
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from autogen_agentchat.agents import AssistantAgent
 from autogen_agentchat.base import TaskResult
 from autogen_ext.models.openai import OpenAIChatCompletionClient
@@ -8,6 +8,8 @@ from datetime import datetime
 import logging
 from monitoring.logger import logger as monitoring_logger
 from monitoring.metrics import metrics_collector, AgentMetrics
+
+from .llm_client import LLMClient, get_llm_client
 
 
 class BaseAgent(ABC):
@@ -20,20 +22,41 @@ class BaseAgent(ABC):
             f"{self.__class__.__name__}_{tenant_id}"
         )
         
-        # 配置LLM
+        # 配置LLM客户端
+        self.llm_client = self._get_llm_client()
+        
+        # 配置AutoGen模型客户端（用于AutoGen框架）
         self.model_client = self._get_model_client()
         
         # 创建AutoGen代理
         self.autogen_agent = self._create_autogen_agent()
     
+    def _get_llm_client(self) -> LLMClient:
+        """获取统一LLM客户端"""
+        # 尝试从租户设置获取配置
+        api_key = self.tenant_settings.get("openai_api_key")
+        api_base = self.tenant_settings.get("openai_base_url")
+        llm_model = self.tenant_settings.get("ai_models", {}).get("primary", "Qwen3-QwQ-32B")
+        
+        if api_key and api_base:
+            return LLMClient(
+                api_key=api_key,
+                api_base=api_base,
+                llm_model=llm_model
+            )
+        else:
+            # 使用全局客户端
+            return get_llm_client()
+    
     def _get_model_client(self) -> OpenAIChatCompletionClient:
-        """获取模型客户端"""
+        """获取AutoGen模型客户端"""
+        import os
         return OpenAIChatCompletionClient(
             model=self.tenant_settings.get("ai_models", {}).get("primary", 
-                                                                "gpt-4"),
-            api_key=self.tenant_settings.get("openai_api_key", ""),
+                                                                os.getenv("LLM_MODEL", "Qwen3-QwQ-32B")),
+            api_key=self.tenant_settings.get("openai_api_key", os.getenv("OPENAI_API_KEY", "")),
             base_url=self.tenant_settings.get("openai_base_url", 
-                                              "https://api.openai.com/v1"),
+                                              os.getenv("OPENAI_API_BASE", "")),
         )
     
     @abstractmethod
@@ -120,20 +143,51 @@ class BaseAgent(ABC):
         """实际的代理执行逻辑，由子类实现"""
         pass
     
-    async def _chat_with_agent(self, message: str) -> str:
-        """与AutoGen代理对话"""
-        # 使用最新的AgentChat API运行代理
-        result: TaskResult = await self.autogen_agent.run(task=message)
-        # 返回结果的最后一个消息内容
-        if result.messages:
-            last_message = result.messages[-1]
-            # 检查消息对象是否有content属性
-            if hasattr(last_message, 'content'):
-                content = getattr(last_message, 'content', '')
-                return content or ""
-            # 如果没有content属性，尝试转换为字符串
-            return str(last_message)
-        return ""
+    async def _chat_with_agent(
+        self, 
+        message: str,
+        temperature: float = 0.7,
+        max_tokens: int = 2000,
+        system_message: Optional[str] = None
+    ) -> str:
+        """
+        与LLM对话 - 使用统一LLM客户端
+        
+        Args:
+            message: 用户消息
+            temperature: 温度参数
+            max_tokens: 最大token数
+            system_message: 系统消息（可选）
+            
+        Returns:
+            LLM生成的响应
+        """
+        try:
+            # 构建消息列表
+            messages = []
+            
+            # 添加系统消息
+            if system_message:
+                messages.append({"role": "system", "content": system_message})
+            elif hasattr(self, 'autogen_agent') and hasattr(self.autogen_agent, '_system_message'):
+                # 尝试从AutoGen代理获取系统消息
+                messages.append({"role": "system", "content": self.autogen_agent._system_message})
+            
+            # 添加用户消息
+            messages.append({"role": "user", "content": message})
+            
+            # 调用LLM
+            response = await self.llm_client.chat_completion(
+                messages=messages,
+                temperature=temperature,
+                max_tokens=max_tokens
+            )
+            
+            return response
+            
+        except Exception as e:
+            self.logger.error(f"LLM chat failed: {str(e)}")
+            raise
     
     def _log(self, message: str, level: str = "info"):
         """记录日志"""

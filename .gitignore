@@ -40,6 +40,11 @@ venv.bak/
 # Configuration files with secrets
 config/keys.py
 .env
+.env.local
+.env.development
+.env.production
+.env.test
+python-backend/config/llm_user_config.json
 
 # Logs
 logs/

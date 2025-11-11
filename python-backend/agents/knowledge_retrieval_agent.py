@@ -9,6 +9,7 @@ import httpx
 from autogen_agentchat.agents import AssistantAgent
 
 from .base_agent import BaseAgent
+from .prompt_templates import KnowledgeRetrievalPrompt
 
 
 class KnowledgeRetrievalAgent(BaseAgent):
@@ -21,13 +22,8 @@ class KnowledgeRetrievalAgent(BaseAgent):
 
     def _create_autogen_agent(self) -> AssistantAgent:
         """创建AutoGen代理实例"""
-        system_message = """你是一个专业的知识检索专家。你的主要职责是：
-1. 根据招标需求从知识库中检索相关信息
-2. 提供行业最佳实践、技术标准和成功案例
-3. 协助其他代理获取专业知识和参考资料
-4. 确保检索的信息准确、相关、及时
-
-请确保检索的信息能够有效支持投标内容的生成。"""
+        # 使用标准化的高质量提示词
+        system_message = KnowledgeRetrievalPrompt.get_system_message()
         
         return AssistantAgent(
             name=f"knowledge_retriever_{self.tenant_id}",
@@ -145,46 +141,121 @@ class KnowledgeRetrievalAgent(BaseAgent):
         query = " ".join(query_parts) + " 成功案例"
         return await self.search_knowledge_base(query)
     
-    def format_knowledge_results(self, results: Dict[str, Any]) -> str:
-        """格式化知识检索结果"""
+    async def format_knowledge_results(
+        self, 
+        results: Dict[str, Any]
+    ) -> str:
+        """格式化知识检索结果 - 使用LLM生成智能摘要"""
         if not results.get("success") or not results.get("results"):
             return "未找到相关信息"
         
-        formatted = "## 知识检索结果\n\n"
-        for i, item in enumerate(results["results"][:5], 1):
-            formatted += f"{i}. **{item.get('title', '无标题')}**\n"
-            formatted += f"   内容: {item.get('content', '')[:200]}...\n"
-            formatted += f"   相关性: {item.get('score', 0):.2f}\n\n"
-        
-        return formatted
+        try:
+            import json
+            
+            # 使用LLM生成知识摘要
+            summary_prompt = f"""
+请对以下知识检索结果进行整合和摘要：
+
+【检索结果】
+{json.dumps(results["results"][:5], ensure_ascii=False, indent=2)}
+
+【任务要求】
+1. 提取关键信息和核心观点
+2. 去除重复内容
+3. 按主题组织信息
+4. 生成连贯的知识摘要（300-500字）
+5. 突出与投标相关的要点
+
+请使用Markdown格式输出。
+"""
+            
+            summary = await self._chat_with_agent(summary_prompt)
+            return summary
+            
+        except Exception as e:
+            # 降级到简单格式化
+            formatted = "## 知识检索结果\n\n"
+            for i, item in enumerate(results["results"][:5], 1):
+                formatted += f"{i}. **{item.get('title', '无标题')}**\n"
+                formatted += f"   内容: {item.get('content', '')[:200]}...\n"
+                formatted += f"   相关性: {item.get('score', 0):.2f}\n\n"
+            
+            return formatted
 
     async def provide_contextual_knowledge(
         self, 
         context: Dict[str, Any]
     ) -> str:
-        """提供上下文相关知识"""
+        """提供上下文相关知识 - 使用LLM智能分析上下文"""
         requirements = context.get("requirements", {})
         analysis = context.get("analysis", {})
         
-        # 根据上下文智能检索
-        knowledge_queries = []
-        
-        # 基于技术需求检索
-        if requirements.get("technical"):
-            knowledge_queries.append("技术实施方案参考")
-        
-        # 基于风险评估检索
-        if analysis.get("risks"):
-            knowledge_queries.append("风险应对策略")
-        
-        # 执行检索并汇总结果
-        all_results = []
-        for query in knowledge_queries:
-            results = await self.search_knowledge_base(query)
-            if results.get("success"):
-                all_results.extend(results["results"])
-        
-        return self.format_knowledge_results({
-            "success": True,
-            "results": all_results
-        })
+        try:
+            import json
+            
+            # 使用LLM分析上下文并生成检索策略
+            strategy_prompt = f"""
+基于以下项目上下文，确定需要检索的知识类型：
+
+【需求信息】
+{json.dumps(requirements, ensure_ascii=False, indent=2)}
+
+【分析结果】
+{json.dumps(analysis, ensure_ascii=False, indent=2)}
+
+【任务】
+分析上下文，列出3-5个最重要的知识检索查询，每个查询应该：
+1. 针对具体的需求或风险
+2. 有助于投标方案的制定
+3. 提供可操作的信息
+
+请以JSON数组格式返回：
+["查询1", "查询2", "查询3"]
+"""
+            
+            response = await self._chat_with_agent(strategy_prompt)
+            
+            # 解析查询列表
+            import re
+            json_match = re.search(r'\[.*?\]', response, re.DOTALL)
+            if json_match:
+                knowledge_queries = json.loads(json_match.group())
+            else:
+                # 降级到规则基础的查询
+                knowledge_queries = []
+                if requirements.get("technical"):
+                    knowledge_queries.append("技术实施方案参考")
+                if analysis.get("risks"):
+                    knowledge_queries.append("风险应对策略")
+            
+            # 执行检索并汇总结果
+            all_results = []
+            for query in knowledge_queries[:3]:  # 限制最多3个查询
+                results = await self.search_knowledge_base(query)
+                if results.get("success"):
+                    all_results.extend(results["results"])
+            
+            # 使用LLM格式化结果
+            return await self.format_knowledge_results({
+                "success": True,
+                "results": all_results
+            })
+            
+        except Exception as e:
+            # 降级方案
+            knowledge_queries = []
+            if requirements.get("technical"):
+                knowledge_queries.append("技术实施方案参考")
+            if analysis.get("risks"):
+                knowledge_queries.append("风险应对策略")
+            
+            all_results = []
+            for query in knowledge_queries:
+                results = await self.search_knowledge_base(query)
+                if results.get("success"):
+                    all_results.extend(results["results"])
+            
+            return await self.format_knowledge_results({
+                "success": True,
+                "results": all_results
+            })
